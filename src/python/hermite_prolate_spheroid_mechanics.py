@@ -50,6 +50,7 @@ coordinateSystemUserNumber = 1
 regionUserNumber = 1
 meshUserNumber = 1
 decompositionUserNumber = 1
+decomposerUserNumber = 1
 (geometricFieldUserNumber,
     fibreFieldUserNumber,
     materialFieldUserNumber,
@@ -66,8 +67,11 @@ iron.Context.WorldRegionGet(worldRegion)
 # for when running in parallel with MPI
 computationEnvironment = iron.ComputationEnvironment()
 iron.Context.ComputationEnvironmentGet(computationEnvironment)
-numberOfComputationalNodes = computationEnvironment.NumberOfWorldNodesGet()
-computationalNodeNumber = computationEnvironment.WorldNodeNumberGet()
+
+worldWorkGroup = iron.WorkGroup()
+computationEnvironment.WorldWorkGroupGet(worldWorkGroup)
+numberOfComputationalNodes = worldWorkGroup.NumberOfGroupNodesGet()
+computationalNodeNumber = worldWorkGroup.GroupNodeNumberGet()
 
 # Create a 3D rectangular cartesian coordinate system
 coordinateSystem = iron.CoordinateSystem()
@@ -91,11 +95,16 @@ mesh = geometry.generateMesh(region)
 # domains when running in parallel
 decomposition = iron.Decomposition()
 decomposition.CreateStart(decompositionUserNumber, mesh)
-decomposition.TypeSet(iron.DecompositionTypes.CALCULATED)
 # Have to enable face calculation for the decomposition
 # in order to be able to use pressure boundary conditions
 decomposition.CalculateFacesSet(True)
 decomposition.CreateFinish()
+
+# Decompose 
+decomposer = iron.Decomposer()
+decomposer.CreateStart(decomposerUserNumber,worldRegion,worldWorkGroup)
+decompositionIndex = decomposer.DecompositionAdd(decomposition)
+decomposer.CreateFinish()
 
 # Create a field for the geometry
 geometricField = iron.Field()
