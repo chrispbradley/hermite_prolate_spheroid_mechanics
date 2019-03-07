@@ -318,11 +318,11 @@ class ProlateSpheroid(object):
 
         self.componentElements = defaultdict(list)
         # Loop from endocardium to epicardium
-        for k in xrange(self.numElements[2]):
+        for k in list(range(self.numElements[2])):
             # Loop from apex to base
-            for j in xrange(self.numElements[1]):
+            for j in list(range(self.numElements[1])):
                 # Loop circumferentially
-                for i in xrange(self.numElements[0]):
+                for i in list(range(self.numElements[0])):
                     nodeAxes = calcNodeAxes(i, j, k)
                     for component in self.interpolations:
                         positions = nodeAxes[component]
@@ -360,14 +360,14 @@ class ProlateSpheroid(object):
         nodeNumber = itertools.count(1)
 
         # Loop from endocardium to epicardium
-        for k in xrange(self.numElements[2] * elFactor + 1):
+        for k in list(range(self.numElements[2] * elFactor + 1)):
             # Apex nodes at mu=0, have multiple apex nodes at same
             # position but different theta, get constrained to be
             # mapped together later:
             # Loop from apex to base
-            for j in xrange(self.numElements[1] * elFactor + 1):
+            for j in list(range(self.numElements[1] * elFactor + 1)):
                 # Loop circumferentially
-                for i in xrange(self.numElements[0] * elFactor):
+                for i in list(range(self.numElements[0] * elFactor)):
                     self.nodePositions.append(xyz(self.focus,
                         lambdaPositions[k], muPositions[j], thetaPositions[i]))
                     self.positionNode[(i, j, k)] = next(nodeNumber)
@@ -546,12 +546,12 @@ class ProlateSpheroid(object):
             elFactor = 1
         nodeSets = []
         # Loop radially
-        for k in xrange(self.numElements[2] * elFactor + 1):
+        for k in lsit(range(self.numElements[2] * elFactor + 1)):
             nodeSets.append([])
             # Longitudinal position at apex:
             j = 0
             # Loop circumferentially
-            for i in xrange(self.numElements[0] * elFactor):
+            for i in list(range(self.numElements[0] * elFactor)):
                 nodeNumber = self.nodeAtPosition((i, j, k))
                 nodeSets[-1].append(nodeNumber)
         return nodeSets
