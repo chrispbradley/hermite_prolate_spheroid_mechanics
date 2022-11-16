@@ -252,7 +252,7 @@ class ProlateSpheroid(object):
                     }
             interpolation = cmissInterpolations[interpolationName]
             basis = iron.Basis()
-            basis.CreateStart(basisUserNumber,iron.Context)
+            basis.CreateStart(basisUserNumber,context)
             basis.TypeSet(iron.BasisTypes.LAGRANGE_HERMITE_TP)
             basis.NumberOfXiSet(3)
             basis.InterpolationXiSet([interpolation] * 3)
