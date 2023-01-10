@@ -21,7 +21,7 @@ sheetAngle = 90.0 * pi / 180.0
 cavityPressure = 0.8
 numIncrements = 1
 
-# Geometric and hydrostatic pressure interpolation:
+# Geometric and hydrostatic pressure interpolation: 
 interpolations = ['cubic_hermite', 'linear']
 # Other interpolations should also work, eg:
 #interpolations = ['quadratic', 'linear']
@@ -33,8 +33,7 @@ hasDerivatives = interpolations[0] == 'cubic_hermite'
 numberGlobalElements = [4, 2, 1]
 
 # Set up a ProlateSpheroid object, which calculates the mesh geometry:
-geometry = prolate_spheroid_geometry.ProlateSpheroid(
-        focus, endocardiumLambda, epicardiumLambda, cutoffAngle,
+geometry = prolate_spheroid_geometry.ProlateSpheroid(focus, endocardiumLambda, epicardiumLambda, cutoffAngle,
         numberGlobalElements, endocardiumFibreAngle, epicardiumFibreAngle, sheetAngle,
         interpolations)
 
@@ -91,7 +90,7 @@ region.CoordinateSystemSet(coordinateSystem)
 region.CreateFinish()
 
 # Create mesh from the prolate spheroid geometry
-mesh = geometry.generateMesh(region)
+mesh = geometry.generateMesh(context, region)
 
 # Create a decomposition for the mesh
 # This breaks the mesh up into multiple decomposition

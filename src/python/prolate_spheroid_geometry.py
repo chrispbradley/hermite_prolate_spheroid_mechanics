@@ -101,8 +101,8 @@ class ProlateSpheroid(object):
         else:
             raise ValueError("Invalid node group: %s" % group)
 
-    def generateMesh(self, region):
-        bases = self.setupBases(region)
+    def generateMesh(self, context, region):
+        bases = self.setupBases(context)
 
         # Start the creation of a mesh in the region, setting
         # the number of mesh elements and number of mesh components
@@ -224,8 +224,8 @@ class ProlateSpheroid(object):
         nodeNum = self.nodeAtPosition(indices)
         return np.array(self.nodes()[nodeNum - 1])
 
-    def setupBases(self, region):
-        """ Set up required bases in an OpenCMISS region
+    def setupBases(self, context):
+        """ Set up required bases in an OpenCMISS context
         """
         # Number of Gauss points used for integration, depends on
         # maximum interpolation degree and has to be the same
@@ -241,7 +241,7 @@ class ProlateSpheroid(object):
 
         # Define bases
         self.bases = {}
-        def makeBasis(userNumber, interpolationName, collapsed):
+        def makeBasis(userNumber, context, interpolationName, collapsed):
             """ Helper function for creating a basis of the
                 given interpolation type and collapsed state
             """
@@ -274,7 +274,7 @@ class ProlateSpheroid(object):
         for i, interpolation in enumerate(self.interpolations):
             # Define standard basis
             basisUserNumber = i + 1
-            makeBasis(basisUserNumber, interpolation, False)
+            makeBasis(basisUserNumber, context, interpolation, False)
 
         return self.bases
 
