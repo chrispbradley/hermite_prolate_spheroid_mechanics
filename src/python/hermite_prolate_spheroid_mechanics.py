@@ -59,6 +59,8 @@ decomposerUserNumber = 1
 equationsSetUserNumber = 1
 problemUserNumber = 1
 
+quit()
+
 context = iron.Context()
 context.Create(contextUserNumber)
 
