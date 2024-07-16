@@ -9,7 +9,7 @@ import itertools
 import numpy as np
 from numpy import pi, sin, cos, sinh, cosh
 
-from opencmiss.iron import iron
+from opencmiss.opencmiss import OpenCMISS_Python as oc
 
 
 class ProlateSpheroid(object):
@@ -107,21 +107,21 @@ class ProlateSpheroid(object):
         # Start the creation of a mesh in the region, setting
         # the number of mesh elements and number of mesh components
         # There are two mesh components, one quadratic and one linear
-        mesh = iron.Mesh()
+        mesh = oc.Mesh()
         mesh.CreateStart(1, region, 3)
         mesh.NumberOfComponentsSet(len(self.interpolations))
         mesh.NumberOfElementsSet(self.totalNumElements(self.interpolations[0]))
 
         # Create nodes in the region, setting the total number required
         # for the prolate spheroid geometry
-        meshNodes = iron.Nodes()
+        meshNodes = oc.Nodes()
         meshNodes.CreateStart(region, self.numNodes())
         meshNodes.CreateFinish()
 
         # Create mesh component elements for each of the
         # linear and quadratic mesh components
         for meshComponent, interpolation in enumerate(self.interpolations, 1):
-            meshElements = iron.MeshElements()
+            meshElements = oc.MeshElements()
             # Set the default basis that has no collapsed nodes
             basis = bases[(interpolation, False)]
             meshElements.CreateStart(mesh, meshComponent, basis)
@@ -137,7 +137,7 @@ class ProlateSpheroid(object):
         return mesh
 
     def setGeometry(self, computationEnvironment, geometricField):
-        decomposition = iron.Decomposition()
+        decomposition = oc.Decomposition()
         geometricField.DecompositionGet(decomposition)
         geometricInterpolation = self.interpolations[0]
         compNodeNumber = computationEnvironment.WorldNodeNumberGet()
@@ -153,8 +153,8 @@ class ProlateSpheroid(object):
                     for derivativeNumber, value in componentValues:
                         # Note: Python uses 0-based indexing, OpenCMISS uses 1-based
                         geometricField.ParameterSetUpdateNode(
-                                iron.FieldVariableTypes.U,
-                                iron.FieldParameterSetTypes.VALUES,
+                                oc.FieldVariableTypes.U,
+                                oc.FieldParameterSetTypes.VALUES,
                                 versionNumber, derivativeNumber, nodeNum, component + 1,
                                 value)
         # After modifying the geometric field, ParameterSetUpdateStart/Finish
@@ -163,11 +163,11 @@ class ProlateSpheroid(object):
         # on just before the geometric values are actually needed, to avoid
         # blocking.
         geometricField.ParameterSetUpdateStart(
-                            iron.FieldVariableTypes.U,
-                            iron.FieldParameterSetTypes.VALUES)
+                            oc.FieldVariableTypes.U,
+                            oc.FieldParameterSetTypes.VALUES)
         geometricField.ParameterSetUpdateFinish(
-                            iron.FieldVariableTypes.U,
-                            iron.FieldParameterSetTypes.VALUES)
+                            oc.FieldVariableTypes.U,
+                            oc.FieldParameterSetTypes.VALUES)
 
     def setFibres(self, computationEnvironment,fibreField):
         endocardiumFibreAngle = self.endocardiumFibreAngle
@@ -187,7 +187,7 @@ class ProlateSpheroid(object):
         endoAngles = np.array([endocardiumFibreAngle, 0.0, sheetAngle])
         lmbdaDerivs = (epiAngles - endoAngles) / self.numElements[2]
 
-        decomposition = iron.Decomposition()
+        decomposition = oc.Decomposition()
         fibreField.DecompositionGet(decomposition)
         # Set fibre angles at nodes
         def setAngles(pos, angles):
@@ -197,7 +197,7 @@ class ProlateSpheroid(object):
                 for component, angle in enumerate(angles, 1):
                     derivative = 1
                     fibreField.ParameterSetUpdateNode(
-                        iron.FieldVariableTypes.U, iron.FieldParameterSetTypes.VALUES,
+                        oc.FieldVariableTypes.U, oc.FieldParameterSetTypes.VALUES,
                         version, derivative, nodeNumber,
                         component, angle)
 
@@ -214,11 +214,11 @@ class ProlateSpheroid(object):
                         setAngles((i, j, k), [fibreAngle, 0.0, sheetAngle])
 
         fibreField.ParameterSetUpdateStart(
-                            iron.FieldVariableTypes.U,
-                            iron.FieldParameterSetTypes.VALUES)
+                            oc.FieldVariableTypes.U,
+                            oc.FieldParameterSetTypes.VALUES)
         fibreField.ParameterSetUpdateFinish(
-                            iron.FieldVariableTypes.U,
-                            iron.FieldParameterSetTypes.VALUES)
+                            oc.FieldVariableTypes.U,
+                            oc.FieldParameterSetTypes.VALUES)
 
     def indicesToPosition(self, indices):
         nodeNum = self.nodeAtPosition(indices)
@@ -246,14 +246,14 @@ class ProlateSpheroid(object):
                 given interpolation type and collapsed state
             """
             cmissInterpolations = {
-                    'cubic_hermite': iron.BasisInterpolationSpecifications.CUBIC_HERMITE,
-                    'quadratic': iron.BasisInterpolationSpecifications.QUADRATIC_LAGRANGE,
-                    'linear': iron.BasisInterpolationSpecifications.LINEAR_LAGRANGE,
+                    'cubic_hermite': oc.BasisInterpolationSpecifications.CUBIC_HERMITE,
+                    'quadratic': oc.BasisInterpolationSpecifications.QUADRATIC_LAGRANGE,
+                    'linear': oc.BasisInterpolationSpecifications.LINEAR_LAGRANGE,
                     }
             interpolation = cmissInterpolations[interpolationName]
-            basis = iron.Basis()
+            basis = oc.Basis()
             basis.CreateStart(basisUserNumber,context)
-            basis.TypeSet(iron.BasisTypes.LAGRANGE_HERMITE_TP)
+            basis.TypeSet(oc.BasisTypes.LAGRANGE_HERMITE_TP)
             basis.NumberOfXiSet(3)
             basis.InterpolationXiSet([interpolation] * 3)
             basis.QuadratureNumberOfGaussXiSet([numberOfGaussXi] * 3)
@@ -262,9 +262,9 @@ class ProlateSpheroid(object):
             basis.QuadratureLocalFaceGaussEvaluateSet(True)
             if collapsed:
                 basis.CollapsedXiSet([
-                    iron.BasisXiCollapse.XI_COLLAPSED,
-                    iron.BasisXiCollapse.COLLAPSED_AT_XI0,
-                    iron.BasisXiCollapse.NOT_COLLAPSED,
+                    oc.BasisXiCollapse.XI_COLLAPSED,
+                    oc.BasisXiCollapse.COLLAPSED_AT_XI0,
+                    oc.BasisXiCollapse.NOT_COLLAPSED,
                     ])
             basis.CreateFinish()
             # Save basis into a dictionary for easy
@@ -396,34 +396,34 @@ class ProlateSpheroid(object):
         """ Calculate dx_i/dxi at prolate spheroidal coordinat lmbda, mu, theta
             where i = xCoordNum and is referenced from 0.
             derivativeNumber gives xi coord to calc deriv wrt to, can be
-            a double or triple derivative, is one of iron.GlobalDerivativeConstants
+            a double or triple derivative, is one of oc.GlobalDerivativeConstants
         """
         focus = self.focus
         pCoords = (lmbda, mu, theta)
-        if derivativeNumber == iron.GlobalDerivativeConstants.NO_GLOBAL_DERIV:
+        if derivativeNumber == oc.GlobalDerivativeConstants.NO_GLOBAL_DERIV:
             return xyz(focus, lmbda, mu, theta)[xCoordNum]
-        elif derivativeNumber == iron.GlobalDerivativeConstants.GLOBAL_DERIV_S1:
+        elif derivativeNumber == oc.GlobalDerivativeConstants.GLOBAL_DERIV_S1:
             return (self.xProlateDerivative(xCoordNum, (0, ), pCoords) *
                     self.prolateXiDerivative(0, 0))
-        elif derivativeNumber == iron.GlobalDerivativeConstants.GLOBAL_DERIV_S2:
+        elif derivativeNumber == oc.GlobalDerivativeConstants.GLOBAL_DERIV_S2:
             return (self.xProlateDerivative(xCoordNum, (1, ), pCoords) *
                     self.prolateXiDerivative(1, 1))
-        elif derivativeNumber == iron.GlobalDerivativeConstants.GLOBAL_DERIV_S1_S2:
+        elif derivativeNumber == oc.GlobalDerivativeConstants.GLOBAL_DERIV_S1_S2:
             return (self.xProlateDerivative(xCoordNum, (0, 1), pCoords) *
                     self.prolateXiDerivative(0, 0) *
                     self.prolateXiDerivative(1, 1))
-        elif derivativeNumber == iron.GlobalDerivativeConstants.GLOBAL_DERIV_S3:
+        elif derivativeNumber == oc.GlobalDerivativeConstants.GLOBAL_DERIV_S3:
             return (self.xProlateDerivative(xCoordNum, (2, ), pCoords) *
                     self.prolateXiDerivative(2, 2))
-        elif derivativeNumber == iron.GlobalDerivativeConstants.GLOBAL_DERIV_S1_S3:
+        elif derivativeNumber == oc.GlobalDerivativeConstants.GLOBAL_DERIV_S1_S3:
             return (self.xProlateDerivative(xCoordNum, (0, 2), pCoords) *
                     self.prolateXiDerivative(0, 0) *
                     self.prolateXiDerivative(2, 2))
-        elif derivativeNumber == iron.GlobalDerivativeConstants.GLOBAL_DERIV_S2_S3:
+        elif derivativeNumber == oc.GlobalDerivativeConstants.GLOBAL_DERIV_S2_S3:
             return (self.xProlateDerivative(xCoordNum, (1, 2), pCoords) *
                     self.prolateXiDerivative(1, 1) *
                     self.prolateXiDerivative(2, 2))
-        elif derivativeNumber == iron.GlobalDerivativeConstants.GLOBAL_DERIV_S1_S2_S3:
+        elif derivativeNumber == oc.GlobalDerivativeConstants.GLOBAL_DERIV_S1_S2_S3:
             return (self.xProlateDerivative(xCoordNum, (0, 1, 2), pCoords) *
                     self.prolateXiDerivative(0, 0) *
                     self.prolateXiDerivative(1, 1) *

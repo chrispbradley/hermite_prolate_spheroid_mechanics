@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import os
 from numpy import pi
-from opencmiss.iron import iron
+from opencmiss.opencmiss import OpenCMISS_Python as oc
 
 import prolate_spheroid_geometry
 
@@ -39,7 +39,7 @@ geometry = prolate_spheroid_geometry.ProlateSpheroid(focus, endocardiumLambda, e
 
 # Constitutive relation setup
 # Guccione constitutive relation:
-constitutiveRelation = iron.EquationsSetSubtypes.TRANSVERSE_ISOTROPIC_EXPONENTIAL
+constitutiveRelation = oc.EquationsSetSubtypes.TRANSVERSE_ISOTROPIC_EXPONENTIAL
 constitutiveParameters = [0.88, 0.0, 18.5, 3.58, 3.26]
 initialHydrostaticPressure = 0.0
 
@@ -59,33 +59,33 @@ decomposerUserNumber = 1
 equationsSetUserNumber = 1
 problemUserNumber = 1
 
-quit()
+#quit()
 
-context = iron.Context()
+context = oc.Context()
 context.Create(contextUserNumber)
 
-worldRegion = iron.Region()
+worldRegion = oc.Region()
 context.WorldRegionGet(worldRegion)
 
 # Get the number of computational nodes and this computational node number
 # for when running in parallel with MPI
-computationEnvironment = iron.ComputationEnvironment()
+computationEnvironment = oc.ComputationEnvironment()
 context.ComputationEnvironmentGet(computationEnvironment)
 
-worldWorkGroup = iron.WorkGroup()
+worldWorkGroup = oc.WorkGroup()
 computationEnvironment.WorldWorkGroupGet(worldWorkGroup)
 numberOfComputationalNodes = worldWorkGroup.NumberOfGroupNodesGet()
 computationalNodeNumber = worldWorkGroup.GroupNodeNumberGet()
 
 # Create a 3D rectangular cartesian coordinate system
-coordinateSystem = iron.CoordinateSystem()
+coordinateSystem = oc.CoordinateSystem()
 coordinateSystem.CreateStart(coordinateSystemUserNumber,context)
 coordinateSystem.DimensionSet(3)
 coordinateSystem.CreateFinish()
 
 # Create a region within the world region and
 # assign the coordinate system to the region
-region = iron.Region()
+region = oc.Region()
 region.CreateStart(regionUserNumber, worldRegion)
 region.LabelSet("ProlateSpheroid")
 region.CoordinateSystemSet(coordinateSystem)
@@ -97,7 +97,7 @@ mesh = geometry.generateMesh(context, region)
 # Create a decomposition for the mesh
 # This breaks the mesh up into multiple decomposition
 # domains when running in parallel
-decomposition = iron.Decomposition()
+decomposition = oc.Decomposition()
 decomposition.CreateStart(decompositionUserNumber, mesh)
 # Have to enable face calculation for the decomposition
 # in order to be able to use pressure boundary conditions
@@ -105,22 +105,22 @@ decomposition.CalculateFacesSet(True)
 decomposition.CreateFinish()
 
 # Decompose 
-decomposer = iron.Decomposer()
+decomposer = oc.Decomposer()
 decomposer.CreateStart(decomposerUserNumber,worldRegion,worldWorkGroup)
 decompositionIndex = decomposer.DecompositionAdd(decomposition)
 decomposer.CreateFinish()
 
 # Create a field for the geometry
-geometricField = iron.Field()
+geometricField = oc.Field()
 geometricField.CreateStart(geometricFieldUserNumber, region)
 geometricField.DecompositionSet(decomposition)
-geometricField.TypeSet(iron.FieldTypes.GEOMETRIC)
-geometricField.VariableLabelSet(iron.FieldVariableTypes.U, "Geometry")
+geometricField.TypeSet(oc.FieldTypes.GEOMETRIC)
+geometricField.VariableLabelSet(oc.FieldVariableTypes.U, "Geometry")
 # Set the x, y and z components to use the first mesh component:
 for component in range(1, 4):
     geometricField.ComponentMeshComponentSet(
-            iron.FieldVariableTypes.U, component, geometricMeshComponent)
-geometricField.ScalingTypeSet(iron.FieldScalingTypes.UNIT)
+            oc.FieldVariableTypes.U, component, geometricMeshComponent)
+geometricField.ScalingTypeSet(oc.FieldScalingTypes.UNIT)
 geometricField.CreateFinish()
 
 # Use the prolate spheroid geometry to set the geometric field parameters
@@ -129,17 +129,17 @@ geometry.setGeometry(computationEnvironment,geometricField)
 # Create a fibre field and attach it to the geometric field
 # This has three components describing fibre orientations as
 # rotations in radians about the z, y' and x'' base vectors.
-fibreField = iron.Field()
+fibreField = oc.Field()
 fibreField.CreateStart(fibreFieldUserNumber, region)
-fibreField.TypeSet(iron.FieldTypes.FIBRE)
+fibreField.TypeSet(oc.FieldTypes.FIBRE)
 fibreField.DecompositionSet(decomposition)
 fibreField.GeometricFieldSet(geometricField)
-fibreField.VariableLabelSet(iron.FieldVariableTypes.U, "Fibre")
-fibreField.ScalingTypeSet(iron.FieldScalingTypes.UNIT)
+fibreField.VariableLabelSet(oc.FieldVariableTypes.U, "Fibre")
+fibreField.ScalingTypeSet(oc.FieldScalingTypes.UNIT)
 # Use linear mesh component for fibre field
 for component in range(1, 4):
     fibreField.ComponentMeshComponentSet(
-                iron.FieldVariableTypes.U, component, pressureMeshComponent)
+                oc.FieldVariableTypes.U, component, pressureMeshComponent)
 fibreField.CreateFinish()
 
 # Use the prolate spheroid geometry to set up the fibre field values
@@ -147,10 +147,10 @@ geometry.setFibres(computationEnvironment,fibreField)
 
 # Create the equations set and equations set field
 # This defines the type of equations to solve
-equationsSetField = iron.Field()
-equationsSet = iron.EquationsSet()
-equationsSetSpecification = [iron.EquationsSetClasses.ELASTICITY, 
-                             iron.EquationsSetTypes.FINITE_ELASTICITY,
+equationsSetField = oc.Field()
+equationsSet = oc.EquationsSet()
+equationsSetSpecification = [oc.EquationsSetClasses.ELASTICITY, 
+                             oc.EquationsSetTypes.FINITE_ELASTICITY,
                              constitutiveRelation]
 equationsSet.CreateStart(equationsSetUserNumber, region, fibreField,
     equationsSetSpecification, equationsSetFieldUserNumber, equationsSetField)
@@ -158,97 +158,97 @@ equationsSet.CreateFinish()
 
 # Create the material field, used for setting constitutive parameters
 # This has an interpolation type of constant by default
-materialField = iron.Field()
+materialField = oc.Field()
 equationsSet.MaterialsCreateStart(materialFieldUserNumber, materialField)
-materialField.VariableLabelSet(iron.FieldVariableTypes.U, "Material")
+materialField.VariableLabelSet(oc.FieldVariableTypes.U, "Material")
 equationsSet.MaterialsCreateFinish()
 
 # Set constant material parameters:
 for (component, value) in enumerate(constitutiveParameters, 1):
     materialField.ComponentValuesInitialise(
-            iron.FieldVariableTypes.U, iron.FieldParameterSetTypes.VALUES,
+            oc.FieldVariableTypes.U, oc.FieldParameterSetTypes.VALUES,
             component, value)
 
 # Create the dependent field for storing the solution
 # This has one U variable for displacement values and hydrostatic pressure,
-# and one DELUDELN variable for the nodal forces
+# and one T variable for the nodal forces
 # Sensible defaults are defined by the equations set, but we can
 # override some settings here, eg. to change the interpolation type
 # for the hydrostatic pressure to node based
-dependentField = iron.Field()
+dependentField = oc.Field()
 equationsSet.DependentCreateStart(dependentFieldUserNumber, dependentField)
-dependentField.VariableLabelSet(iron.FieldVariableTypes.U, "Dependent")
+dependentField.VariableLabelSet(oc.FieldVariableTypes.U, "Dependent")
 if nodalPressure:
     dependentField.ComponentInterpolationSet(
-            iron.FieldVariableTypes.U, 4,
-            iron.FieldInterpolationTypes.NODE_BASED)
+            oc.FieldVariableTypes.U, 4,
+            oc.FieldInterpolationTypes.NODE_BASED)
     dependentField.ComponentInterpolationSet(
-            iron.FieldVariableTypes.DELUDELN, 4,
-            iron.FieldInterpolationTypes.NODE_BASED)
+            oc.FieldVariableTypes.T, 4,
+            oc.FieldInterpolationTypes.NODE_BASED)
     dependentField.ComponentMeshComponentSet(
-            iron.FieldVariableTypes.U, 4, pressureMeshComponent)
+            oc.FieldVariableTypes.U, 4, pressureMeshComponent)
     dependentField.ComponentMeshComponentSet(
-            iron.FieldVariableTypes.DELUDELN, 4, pressureMeshComponent)
+            oc.FieldVariableTypes.T, 4, pressureMeshComponent)
 else:
     dependentField.ComponentInterpolationSet(
-            iron.FieldVariableTypes.U, 4,
-            iron.FieldInterpolationTypes.ELEMENT_BASED)
+            oc.FieldVariableTypes.U, 4,
+            oc.FieldInterpolationTypes.ELEMENT_BASED)
     dependentField.ComponentInterpolationSet(
-            iron.FieldVariableTypes.DELUDELN, 4,
-            iron.FieldInterpolationTypes.ELEMENT_BASED)
-dependentField.ScalingTypeSet(iron.FieldScalingTypes.UNIT)
+            oc.FieldVariableTypes.T, 4,
+            oc.FieldInterpolationTypes.ELEMENT_BASED)
+dependentField.ScalingTypeSet(oc.FieldScalingTypes.UNIT)
 equationsSet.DependentCreateFinish()
 
 # Initialise dependent field position values from the undeformed geometry
 for component in [1, 2, 3]:
     geometricField.ParametersToFieldParametersComponentCopy(
-        iron.FieldVariableTypes.U,
-        iron.FieldParameterSetTypes.VALUES, component,
-        dependentField, iron.FieldVariableTypes.U,
-        iron.FieldParameterSetTypes.VALUES, component)
+        oc.FieldVariableTypes.U,
+        oc.FieldParameterSetTypes.VALUES, component,
+        dependentField, oc.FieldVariableTypes.U,
+        oc.FieldParameterSetTypes.VALUES, component)
     dependentField.ComponentValuesInitialise(
-        iron.FieldVariableTypes.DELUDELN,
-        iron.FieldParameterSetTypes.VALUES,
+        oc.FieldVariableTypes.T,
+        oc.FieldParameterSetTypes.VALUES,
         component, 0.0)
 
 # Set the initial hydrostatic pressure
 dependentField.ComponentValuesInitialise(
-    iron.FieldVariableTypes.U,
-    iron.FieldParameterSetTypes.VALUES,
+    oc.FieldVariableTypes.U,
+    oc.FieldParameterSetTypes.VALUES,
     4, initialHydrostaticPressure)
 dependentField.ComponentValuesInitialise(
-    iron.FieldVariableTypes.DELUDELN,
-    iron.FieldParameterSetTypes.VALUES,
+    oc.FieldVariableTypes.T,
+    oc.FieldParameterSetTypes.VALUES,
     4, 0.0)
 
 # Create a deformed geometry field, as cmgui doesn't like displaying
 # deformed fibres from the dependent field because it isn't a geometric field.
-deformedField = iron.Field()
+deformedField = oc.Field()
 deformedField.CreateStart(deformedFieldUserNumber, region)
 deformedField.DecompositionSet(decomposition)
-deformedField.TypeSet(iron.FieldTypes.GEOMETRIC)
-deformedField.VariableLabelSet(iron.FieldVariableTypes.U, "DeformedGeometry")
+deformedField.TypeSet(oc.FieldTypes.GEOMETRIC)
+deformedField.VariableLabelSet(oc.FieldVariableTypes.U, "DeformedGeometry")
 for component in [1, 2, 3]:
     deformedField.ComponentMeshComponentSet(
-            iron.FieldVariableTypes.U, component,
+            oc.FieldVariableTypes.U, component,
             geometricMeshComponent)
-deformedField.ScalingTypeSet(iron.FieldScalingTypes.UNIT)
+deformedField.ScalingTypeSet(oc.FieldScalingTypes.UNIT)
 deformedField.CreateFinish()
 
 # Create equations
-equations = iron.Equations()
+equations = oc.Equations()
 equationsSet.EquationsCreateStart(equations)
-equations.SparsityTypeSet(iron.EquationsSparsityTypes.SPARSE)
-equations.OutputTypeSet(iron.EquationsOutputTypes.NONE)
+equations.SparsityTypeSet(oc.EquationsSparsityTypes.SPARSE)
+equations.OutputTypeSet(oc.EquationsOutputTypes.NONE)
 equationsSet.EquationsCreateFinish()
 
 # Define the problem
 # The problem defines how the equations are solved by
 # setting up control loops and solvers
-problem = iron.Problem()
-problemSpecification = [iron.ProblemClasses.ELASTICITY,
-        iron.ProblemTypes.FINITE_ELASTICITY,
-        iron.ProblemSubtypes.STATIC_FINITE_ELASTICITY]
+problem = oc.Problem()
+problemSpecification = [oc.ProblemClasses.ELASTICITY,
+        oc.ProblemTypes.FINITE_ELASTICITY,
+        oc.ProblemSubtypes.STATIC_FINITE_ELASTICITY]
 problem.CreateStart(problemUserNumber,context,problemSpecification)
 problem.CreateFinish()
 
@@ -258,43 +258,43 @@ problem.CreateFinish()
 # the number of load increments by setting the number of
 # iterations of this control loop
 problem.ControlLoopCreateStart()
-controlLoop = iron.ControlLoop()
-problem.ControlLoopGet([iron.ControlLoopIdentifiers.NODE], controlLoop)
+controlLoop = oc.ControlLoop()
+problem.ControlLoopGet([oc.ControlLoopIdentifiers.NODE], controlLoop)
 controlLoop.MaximumIterationsSet(numIncrements)
-controlLoop.OutputTypeSet(iron.ControlLoopOutputTypes.PROGRESS)
+controlLoop.OutputTypeSet(oc.ControlLoopOutputTypes.PROGRESS)
 problem.ControlLoopCreateFinish()
 
 # Create the problem solver
-solver = iron.Solver()
+solver = oc.Solver()
 problem.SolversCreateStart()
-problem.SolverGet([iron.ControlLoopIdentifiers.NODE], 1, solver)
-solver.OutputTypeSet(iron.SolverOutputTypes.MONITOR)
-solver.NewtonJacobianCalculationTypeSet(iron.JacobianCalculationTypes.FD)
+problem.SolverGet([oc.ControlLoopIdentifiers.NODE], 1, solver)
+solver.OutputTypeSet(oc.SolverOutputTypes.MONITOR)
+solver.NewtonJacobianCalculationTypeSet(oc.JacobianCalculationTypes.FD)
 solver.NewtonRelativeToleranceSet(1.0e-14)
 solver.NewtonAbsoluteToleranceSet(1.0e-14)
 solver.NewtonSolutionToleranceSet(1.0e-14)
 # Adjust settings for the line search solver
-linesearchSolver = iron.Solver()
+linesearchSolver = oc.Solver()
 solver.NewtonLinearSolverGet(linesearchSolver)
-linesearchSolver.LinearTypeSet(iron.LinearSolverTypes.DIRECT)
+linesearchSolver.LinearTypeSet(oc.LinearSolverTypes.DIRECT)
 problem.SolversCreateFinish()
 
 # Create solver equations for the problem and add
 # the single equations set to solver equations.
 # For coupled problems there may be multiple equations sets
 # solved within one solver equations
-solver = iron.Solver()
-solverEquations = iron.SolverEquations()
+solver = oc.Solver()
+solverEquations = oc.SolverEquations()
 problem.SolverEquationsCreateStart()
-problem.SolverGet([iron.ControlLoopIdentifiers.NODE], 1, solver)
+problem.SolverGet([oc.ControlLoopIdentifiers.NODE], 1, solver)
 solver.SolverEquationsGet(solverEquations)
-solverEquations.SparsityTypeSet(iron.SolverEquationsSparsityTypes.SPARSE)
+solverEquations.SparsityTypeSet(oc.SolverEquationsSparsityTypes.SPARSE)
 # Only a single equations set to add, the finite elasticity equations:
 equationsSetIndex = solverEquations.EquationsSetAdd(equationsSet)
 problem.SolverEquationsCreateFinish()
 
 # Prescribe boundary conditions on the solver equations
-boundaryConditions = iron.BoundaryConditions()
+boundaryConditions = oc.BoundaryConditions()
 solverEquations.BoundaryConditionsCreateStart(boundaryConditions)
 
 def getDomainNodes(computationEnvironment, geometry, decomposition, component):
@@ -315,14 +315,14 @@ for node in fixedNodes.intersection(geometricDomainNodes):
         derivative, version = 1, 1
         # AddNode is used, as this fixes the nodal value at an
         # increment (in this case 0) from the current value
-        boundaryConditions.AddNode(dependentField, iron.FieldVariableTypes.U,
+        boundaryConditions.AddNode(dependentField, oc.FieldVariableTypes.U,
                 version, derivative, node, component,
-                iron.BoundaryConditionsTypes.FIXED, 0.0)
+                oc.BoundaryConditionsTypes.FIXED, 0.0)
         if hasDerivatives:
-            derivative = iron.GlobalDerivativeConstants.GLOBAL_DERIV_S1
-            boundaryConditions.AddNode(dependentField, iron.FieldVariableTypes.U,
+            derivative = oc.GlobalDerivativeConstants.GLOBAL_DERIV_S1
+            boundaryConditions.AddNode(dependentField, oc.FieldVariableTypes.U,
                     version, derivative, node, component,
-                    iron.BoundaryConditionsTypes.FIXED, 0.0)
+                    oc.BoundaryConditionsTypes.FIXED, 0.0)
 
 # Constrain degrees of freedom at the apex to collapse faces:
 constrainedNodeSets = geometry.constrainedNodes()
@@ -334,26 +334,26 @@ for nodes in constrainedNodeSets:
             # Map nodal values + xi_3 derivative to same value,
             if hasDerivatives:
                 mappedDerivatives = [
-                    iron.GlobalDerivativeConstants.NO_GLOBAL_DERIV,
-                    iron.GlobalDerivativeConstants.GLOBAL_DERIV_S3]
+                    oc.GlobalDerivativeConstants.NO_GLOBAL_DERIV,
+                    oc.GlobalDerivativeConstants.GLOBAL_DERIV_S3]
             else:
                 mappedDerivatives = [
-                    iron.GlobalDerivativeConstants.NO_GLOBAL_DERIV]
+                    oc.GlobalDerivativeConstants.NO_GLOBAL_DERIV]
             for derivative in mappedDerivatives:
-                boundaryConditions.ConstrainNodeDofsEqual(dependentField, iron.FieldVariableTypes.U,
+                boundaryConditions.ConstrainNodeDofsEqual(dependentField, oc.FieldVariableTypes.U,
                         version, derivative, component, nodes, 1.0)
             # Fix xi_1 derivative to be zero
             if hasDerivatives:
                 for node in nodes:
                     for derivative in [
-                            iron.GlobalDerivativeConstants.GLOBAL_DERIV_S1,
-                            iron.GlobalDerivativeConstants.GLOBAL_DERIV_S1_S2,
-                            iron.GlobalDerivativeConstants.GLOBAL_DERIV_S1_S3,
-                            iron.GlobalDerivativeConstants.GLOBAL_DERIV_S1_S2_S3,
+                            oc.GlobalDerivativeConstants.GLOBAL_DERIV_S1,
+                            oc.GlobalDerivativeConstants.GLOBAL_DERIV_S1_S2,
+                            oc.GlobalDerivativeConstants.GLOBAL_DERIV_S1_S3,
+                            oc.GlobalDerivativeConstants.GLOBAL_DERIV_S1_S2_S3,
                             ]:
-                        boundaryConditions.SetNode(dependentField, iron.FieldVariableTypes.U,
+                        boundaryConditions.SetNode(dependentField, oc.FieldVariableTypes.U,
                                 version, derivative, node, component,
-                                iron.BoundaryConditionsTypes.FIXED, 0.0)
+                                oc.BoundaryConditionsTypes.FIXED, 0.0)
     elif any(in_domain):
         raise RuntimeError("Mesh decomposition has DOFs "
                 "that must be constrained to be equal in separate domains")
@@ -364,11 +364,11 @@ for node in internalNodes.intersection(geometricDomainNodes):
     derivative, version = 1, 1
     # xi_3 is the transmural direction
     xiDirection = 3
-    # For pressure/force boundary conditions, the DELUDELN field variable is
+    # For pressure/force boundary conditions, the T field variable is
     # constrained rather than the U field variable
-    boundaryConditions.SetNode(dependentField, iron.FieldVariableTypes.DELUDELN,
+    boundaryConditions.SetNode(dependentField, oc.FieldVariableTypes.T,
             version, derivative, node, xiDirection,
-            iron.BoundaryConditionsTypes.PRESSURE_INCREMENTED, -cavityPressure)
+            oc.BoundaryConditionsTypes.PRESSURE_INCREMENTED, -cavityPressure)
 
 solverEquations.BoundaryConditionsCreateFinish()
 
@@ -378,16 +378,16 @@ problem.Solve()
 # Copy deformed geometry into deformed field
 for component in [1, 2, 3]:
     dependentField.ParametersToFieldParametersComponentCopy(
-        iron.FieldVariableTypes.U,
-        iron.FieldParameterSetTypes.VALUES, component,
-        deformedField, iron.FieldVariableTypes.U,
-        iron.FieldParameterSetTypes.VALUES, component)
+        oc.FieldVariableTypes.U,
+        oc.FieldParameterSetTypes.VALUES, component,
+        deformedField, oc.FieldVariableTypes.U,
+        oc.FieldParameterSetTypes.VALUES, component)
 
 if not os.path.exists("./results"):
     os.makedirs("./results")
 
 # Export results to exnode/exelem files
-fields = iron.Fields()
+fields = oc.Fields()
 fields.CreateRegion(region)
 fields.NodesExport("./results/prolate_spheroid", "FORTRAN")
 fields.ElementsExport("./results/prolate_spheroid", "FORTRAN")
