@@ -144,7 +144,7 @@ class ProlateSpheroid(object):
         geometricMeshComponent = 1
         # Set the geometric field parameters from the prolate spheroid geometry
         for nodeNum, values in enumerate(self.nodeValues(), 1):
-            if decomposition.NodeDomainGet(nodeNum, geometricMeshComponent) == compNodeNumber:
+            if decomposition.NodeDomainGet(geometricMeshComponent, nodeNum) == compNodeNumber:
                 versionNumber = 1
                 for component in range(3):
                     componentValues = values[component]
@@ -192,7 +192,7 @@ class ProlateSpheroid(object):
         # Set fibre angles at nodes
         def setAngles(pos, angles):
             nodeNumber = self.nodeAtPosition(pos)
-            if decomposition.NodeDomainGet(nodeNumber, geometricMeshComponent) == compNodeNumber:
+            if decomposition.NodeDomainGet(geometricMeshComponent, nodeNumber) == compNodeNumber:
                 version = 1
                 for component, angle in enumerate(angles, 1):
                     derivative = 1

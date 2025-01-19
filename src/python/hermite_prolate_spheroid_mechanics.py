@@ -303,7 +303,7 @@ def getDomainNodes(computationEnvironment, geometry, decomposition, component):
     nodes = geometry.componentNodes(component_name)
     meshComponent = geometry.meshComponent(component_name)
     return set(node for node in nodes
-        if decomposition.NodeDomainGet(node, meshComponent) == computationalNodeNumber)
+        if decomposition.NodeDomainGet(meshComponent, node) == computationalNodeNumber)
 geometricDomainNodes = getDomainNodes(computationEnvironment, geometry, decomposition, geometricMeshComponent)
 
 # Fix epicardium nodes at the base:
